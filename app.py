@@ -1,14 +1,15 @@
+
 import os
 from flask import Flask, render_template_string, request
 import google.generativeai as genai
 
 app = Flask(__name__)
 
-# CONFIGURAÇÃO DO GOOGLE GEMINI (O Render não precisa de Proxy!)
-genai.configure(api_key="AIzaSyAlFXTJ319g07otXyWf5iPFSoduHSuifDk")
+# CONFIGURAÇÃO SEGURA: Ele vai ler a chave que vamos colocar no Render
+api_key_env = os.environ.get("GEMINI_API_KEY")
+genai.configure(api_key=api_key_env)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# Visual Moderno da BESTTEC SYSTEM
 html_code = '''
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -33,7 +34,7 @@ html_code = '''
     <div class="chat-container">
         <div class="chat-header">BESTTEC SYSTEM</div>
         <div id="chat-window">
-            <div class="msg bot-msg">Olá! Bem-vindo à <b>BESTTEC SYSTEM</b>. Como posso ajudar com tecnologia hoje?</div>
+            <div class="msg bot-msg">Olá! <b>BESTTEC SYSTEM</b> configurada com sucesso. Como posso te ajudar?</div>
         </div>
         <div class="input-area">
             <input type="text" id="user-input" placeholder="Digite sua mensagem...">
@@ -54,7 +55,7 @@ html_code = '''
                 const data = await response.text();
                 chatWindow.innerHTML += `<div class="msg bot-msg">${data}</div>`;
             } catch (err) {
-                chatWindow.innerHTML += `<div class="msg bot-msg">Erro ao conectar com a IA.</div>`;
+                chatWindow.innerHTML += `<div class="msg bot-msg">Erro ao conectar com a IA. Verifique a chave no Render.</div>`;
             }
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
@@ -75,9 +76,8 @@ def chat():
         response = model.generate_content(user_message)
         return response.text
     except Exception as e:
-        return f"Erro: {str(e)}"
+        return f"Erro na IA: {str(e)}"
 
 if __name__ == '__main__':
-    # O Render usa a porta que o sistema fornecer
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
